@@ -5,6 +5,7 @@ import pickle as pkl
 import os
 import json
 from matplotlib.widgets import Slider
+from matplotlib.widgets import CheckButtons
 
 import globals
 import heatmap
@@ -80,31 +81,53 @@ initialize_heatmap(all_heatmap_data, ax, bg_image)
 #initialize_humidity()
 
 # Add a slider for timeline navigation
-ax_slider = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
-slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
+slider_ax = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
+slider = Slider(slider_ax, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
 slider.vline._linewidth = 0
 
 # Update function for slider
-def update(val):
 
-    if globals.HEATMAP_SELECTED == True:
-        global current_index
-        current_index = int(slider.val)
+def move_slider(val):
+    global current_index
+    current_index = val
+    update()
 
-        # Remove only the KDE plot, not the background image
-        for artist in ax.collections:
-            artist.remove()        
-            
-        # Plot the KDE plot without clearing the background image
+def update():
+
+    for artist in ax.collections:
+        artist.remove()      
+
+    global check_states
+
+    if check_states['Humidity']:
+        # TODO
         draw_kdeplot(all_heatmap_data)
+    
+    if check_states['Illuminocity']:
+        # TODO
+        pass
 
-        # draw_scatterplot(all_heatmap_data)
+    if check_states['Temperature']:
+        # TODO
+        pass
+
+    if check_states['Occupation']:
+        draw_scatterplot(all_heatmap_data)
         
-        # Ensure the x and y limits remain the same after updating the plot
-        ax.set_xlim(globals.MIN_X, globals.MAX_X)
-        ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
-        plt.draw()
+    ax.set_xlim(globals.MIN_X, globals.MAX_X)
+    ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
+    plt.draw()
 
-slider.on_changed(update)
+slider.on_changed(move_slider)
+
+check_states = {'Humidity': False, 'Illuminocity': False, 'Temperature': False, 'Occupation': False}
+check_ax = plt.axes([0.05, 0.4, 0.1, 0.15])  # [left, bottom, width, height]
+checkboxes = CheckButtons(check_ax, check_states.keys(), check_states.values())
+
+def toggle_checkbox(label):
+    check_states[label] = not check_states[label]
+    update()
+
+checkboxes.on_clicked(toggle_checkbox)
 
 plt.show()
