@@ -51,15 +51,9 @@ def initialize_heatmap(all_data):
     ax.axis('off')
     
 def initialize_illuminocity(all_illuminocity_data, ax):
-    # Assuming 'all_illuminocity_data' is a list of dictionaries with 'x', 'y', and 'illum' keys
-    # where 'illum' represents the illuminance value.
-    # This function will create a scatter plot overlaying the heatmap to represent illuminance data.
-    
-    # Convert the list of dictionaries to a DataFrame for easier manipulation
+
     df_illuminocity = pd.DataFrame(all_illuminocity_data)
-    
-    # Create a scatter plot using the 'illum' column as the size of the points
-    # to visually represent the intensity of the illuminance.
+
     sc = ax.scatter(df_illuminocity['x'], df_illuminocity['y'], s=df_illuminocity['illum'], c='yellow', alpha=0.6, edgecolors='none')
     
     return sc
@@ -88,7 +82,7 @@ fig, ax = plt.subplots()
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('../data/test_background.png')
+bg_image = plt.imread('data/test_background.png')
 
 # Plot the background image
 ax.imshow(bg_image,
@@ -103,9 +97,9 @@ ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
 # Load background image
 bg_image = plt.imread('data/test_background.png')
 
-initialize_heatmap(all_heatmap_data, ax, bg_image)
+initialize_heatmap(all_heatmap_data)
 
-initialize_illuminocity(all_illuminocity_data, ax)
+#initialize_illuminocity(all_illuminocity_data, ax)
 
 # Add a slider for timeline navigation
 slider_ax = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
@@ -132,10 +126,7 @@ def update():
         pass
     
     if check_states['Illuminocity']:
-        for artist in ax.collections:
-                    if isinstance(artist, matplotlib.collections.PathCollection):
-                        artist.remove()
-                    initialize_illuminocity(all_illuminocity_data, ax)
+        initialize_illuminocity(all_illuminocity_data, ax)
 
     if check_states['Temperature']:
         # TODO
