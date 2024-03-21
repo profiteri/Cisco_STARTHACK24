@@ -54,15 +54,13 @@ def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
                        clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
                        cmap=cmap, fill=True, alpha=0.4, ax=ax)
 
-def draw_humudity(all_data, draw_legend):
+def draw_humidity(all_data):
     if current_index >= len(all_data):
         print("Humidity index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    res = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax, legend=draw_legend, linewidth=0)
-    if draw_legend:
-        sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
-    return res
+    scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax, legend=False, linewidth=0)
+    return scatter_plot
     
 def draw_illuminance(all_data, draw_legend):
     if current_index >= len(all_data):
@@ -133,11 +131,7 @@ def update():
     global check_states
 
     if check_states['Humidity']:
-        if globals.HUMIDITY_INITIALIZED == False:
-            draw_humudity(all_humidity_data, False)
-            globals.HUMIDITY_INITIALIZED = True
-        else:
-            draw_humudity(all_humidity_data, False)
+        draw_humidity(all_humidity_data)
         
     if check_states['Illuminance']:
         draw_illuminance(all_illuminance_data, False)
