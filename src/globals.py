@@ -9,13 +9,11 @@ def init():
     global MAX_X
     global MIN_Y
     global MAX_Y
+    global HUMIDITY_INITIALIZED
 
     TIMESTAMP_GRANULARITY = 5
     LOCATION_PRECISION = 50
 
-    HEATMAP_SELECTED = True 
-    ILLUMINOCITY_SELECTED = False
-    HUMIDITY_SELECTED = True
-    USERS_TRACKING_SELECTED = False
+    HUMIDITY_INITIALIZED = False
 
     MIN_X = MAX_X = MIN_Y = MAX_Y = 0
