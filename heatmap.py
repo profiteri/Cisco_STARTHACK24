@@ -45,15 +45,15 @@ print(f"y: {min_y} - {max_y}")
 
 from matplotlib.widgets import Slider
 
-location_precision = 50
-
 all_data = []
 
-for events in list(events_at_timestamp.values())[:10]:
+events_at_timestamp = dict(sorted(events_at_timestamp.items()))
+
+for events in events_at_timestamp.values():
     df = {"x": [], "y": []}
     for event in events:
-        x = event["deviceLocationUpdate"]["xPos"] // location_precision
-        y = event["deviceLocationUpdate"]["yPos"] // location_precision
+        x = event["deviceLocationUpdate"]["xPos"]
+        y = event["deviceLocationUpdate"]["yPos"]
         df["x"].append(x)
         df["y"].append(y)
     all_data.append(df)
@@ -67,17 +67,16 @@ bg_image = plt.imread('test_background.png')
 # Plot the background image
 ax.imshow(bg_image,
            aspect='auto',
-           extent=[min_x // location_precision,
-                   max_x // location_precision,
-                   min_y // location_precision,
-                   max_y // location_precision])
+           extent=[min_x, max_x, min_y, max_y])
 
 # Plot the initial KDE plot
 kde_plot = sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
 
+ax.axis('off')
+
 # Set the limits for the x and y axes to prevent the graph from changing height
-ax.set_xlim(min_x // location_precision, max_x // location_precision)
-ax.set_ylim(min_y // location_precision, max_y // location_precision)
+ax.set_xlim(min_x, max_x)
+ax.set_ylim(min_y, max_y)
 
 # Add a slider for timeline navigation
 ax_slider = plt.axes([0.2, 0.05, 0.65, 0.03])  # [left, bottom, width, height]
@@ -93,8 +92,8 @@ def update(val):
     # Plot the KDE plot without clearing the background image
     sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
     # Ensure the x and y limits remain the same after updating the plot
-    ax.set_xlim(min_x // location_precision, max_x // location_precision)
-    ax.set_ylim(min_y // location_precision, max_y // location_precision)
+    ax.set_xlim(min_x, max_x)
+    ax.set_ylim(min_y, max_y)
     plt.draw()
 
 slider.on_changed(update)
