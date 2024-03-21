@@ -21,7 +21,7 @@ start_time = time.time()
 
 def load_dataset():
 
-    filename = os.path.join("data/logs.json")
+    filename = os.path.join("data/logs_short.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -70,7 +70,7 @@ def draw_illuminance(all_data, draw_legend):
         print("Illuminance index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=300, palette=sns.color_palette("Blues", as_cmap=True), alpha=0.3, ax=ax, legend=draw_legend, linewidth=0)
+    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=500, palette=sns.color_palette("YlOrBr", as_cmap=True), alpha=0.2, ax=ax, legend=draw_legend, linewidth=0)
     if draw_legend:
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
@@ -106,7 +106,7 @@ fig, ax = plt.subplots()
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('analytics/data/test_background.png')
+bg_image = plt.imread('data/test_background.png')
 
 def draw_background_image():    
     ax.imshow(bg_image,
