@@ -18,7 +18,7 @@ MIN_X = MAX_X = MIN_Y = MAX_Y = 0
 
 def load_dataset():
 
-    filename = os.path.join("logs_short.json")
+    filename = os.path.join("logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -81,8 +81,18 @@ def prepare_heatmap_data(events_at_timestamp):
 
     return all_data
 
+
+def draw_scatterplot(all_data):
+    pal = sns.color_palette("flare")
+    c = pal.as_hex()[len(pal) // 2 - 2]
+    return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
+
+
 def draw_kdeplot(all_data):
-    return sns.kdeplot(data=all_data[current_index], x="x", y="y", bw_adjust=0.2, cmap="Reds", fill=True, alpha=0.4, ax=ax)
+    return sns.kdeplot(data=all_data[current_index], x="x", y="y",
+                       bw_adjust=0.2, levels=20,
+                       clip = ((MIN_X, MAX_X), (MIN_Y, MAX_Y)), common_norm=False,
+                       cmap="Reds", fill=True, alpha=0.4, ax=ax)
 
 def initialize_heatmap(all_data, ax, bg_image):
 
@@ -95,6 +105,7 @@ def initialize_heatmap(all_data, ax, bg_image):
 
     # Plot the initial KDE plot
     draw_kdeplot(all_data)
+    # draw_scatterplot(all_data)
     ax.axis('off')
 
 # Prepare generic data
@@ -124,8 +135,9 @@ initialize_heatmap(all_heatmap_data, ax, bg_image)
 #initialize_humidity
 
 # Add a slider for timeline navigation
-ax_slider = plt.axes([0.2, 0.05, 0.65, 0.03])  # [left, bottom, width, height]
-slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1)
+ax_slider = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
+slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
+slider.vline._linewidth = 0
 
 # Update function for slider
 def update(val):
@@ -139,6 +151,7 @@ def update(val):
             artist.remove()        
             
         # Plot the KDE plot without clearing the background image
+        # draw_scatterplot(all_heatmap_data)
         draw_kdeplot(all_heatmap_data)
         
         # Ensure the x and y limits remain the same after updating the plot
