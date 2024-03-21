@@ -2,13 +2,17 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle as pkl
+import pandas as pd
 import os
 import json
 from matplotlib.widgets import Slider
+from matplotlib.widgets import CheckButtons
 import pandas as pd
 import matplotlib
 import globals
 import heatmap
+import humidity
+#import illuminocity
 
 globals.init()
 
@@ -30,13 +34,14 @@ def draw_kdeplot(all_data, data_key='current_index', value_x='x', value_y='y', c
                        clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
                        cmap=cmap, fill=True, alpha=0.4, ax=ax)
 
-def initialize_heatmap(all_data, ax, bg_image):
+def draw_humudity(all_data):
+    glue = pd.DataFrame.from_dict(all_data[current_index]) 
+    print(glue)
+    sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax)
 
-    # Plot the background image
-    ax.imshow(bg_image,
-              aspect='auto',
-              extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
+def initialize_heatmap(all_data):
 
+    current_index = 0
     # Plot the initial KDE plot
     # Assuming 'all_data' is a list of data frames, one for each 'current_index'.
     # We need to pass an integer index to access the data frame for the initial plot.
@@ -63,6 +68,7 @@ raw_ds              = load_dataset()
 
 # Prepare concrete data
 events_at_timestamp_heatmap = heatmap.filter_heatmap_events(raw_ds)
+events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
 
 # Prepare heatmap data
 global all_heatmap_data
@@ -75,11 +81,20 @@ all_illuminocity_data = illuminocity.prepare_illuminocity_data(raw_ds)
 
 # Prepare humidity data
 global all_humidity_data
-# ...
+all_humidity_data = humidity.prepare_humidity_data(events_at_timestamp_humidity)
 
 # Create the initial figure and axis
 fig, ax = plt.subplots()
 current_index = 0
+
+# Load bg image
+bg_image = plt.imread('../data/test_background.png')
+
+# Plot the background image
+ax.imshow(bg_image,
+        aspect='auto',
+        extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
+ax.axis('off')
 
 # Set the limits for the x and y axes to prevent the graph from changing height
 ax.set_xlim(globals.MIN_X, globals.MAX_X)
@@ -93,35 +108,56 @@ initialize_heatmap(all_heatmap_data, ax, bg_image)
 initialize_illuminocity(all_illuminocity_data, ax)
 
 # Add a slider for timeline navigation
-ax_slider = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
-slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
+slider_ax = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
+slider = Slider(slider_ax, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
 slider.vline._linewidth = 0
 
 # Update function for slider
-def update(val):
-    if globals.HEATMAP_SELECTED:
-        global current_index
-        current_index = int(slider.val)
 
-        # Remove only the KDE plot, not the background image
+def move_slider(val):
+    global current_index
+    current_index = val
+    update()
+
+def update():
+
+    for artist in ax.collections:
+        artist.remove()      
+
+    global check_states
+
+    if check_states['Humidity']:
+        # TODO
+        draw_humudity(all_humidity_data)
+        pass
+    
+    if check_states['Illuminocity']:
         for artist in ax.collections:
-            artist.remove()
+                    if isinstance(artist, matplotlib.collections.PathCollection):
+                        artist.remove()
+                    initialize_illuminocity(all_illuminocity_data, ax)
 
-        # Plot the KDE plot without clearing the background image
-        draw_kdeplot(all_heatmap_data, data_key=current_index)
+    if check_states['Temperature']:
+        # TODO
+        pass
 
-        # Ensure the x and y limits remain the same after updating the plot
-        ax.set_xlim(globals.MIN_X, globals.MAX_X)
-        ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
-    if globals.ILLUMINOCITY_SELECTED:
-        # Clear previous illuminocity scatter plot
-        for artist in ax.collections:
-            if isinstance(artist, matplotlib.collections.PathCollection):
-                artist.remove()
-            initialize_illuminocity(all_illuminocity_data, ax)
-
+    if check_states['Occupation']:
+        draw_scatterplot(all_heatmap_data)
+        
+    ax.set_xlim(globals.MIN_X, globals.MAX_X)
+    ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
     plt.draw()
 
-slider.on_changed(update)
+slider.on_changed(move_slider)
+
+check_states = {'Humidity': False, 'Illuminocity': False, 'Temperature': False, 'Occupation': False}
+check_ax = plt.axes([0.05, 0.4, 0.1, 0.15])  # [left, bottom, width, height]
+checkboxes = CheckButtons(check_ax, check_states.keys(), check_states.values())
+
+def toggle_checkbox(label):
+    check_states[label] = not check_states[label]
+    update()
+
+checkboxes.on_clicked(toggle_checkbox)
 
 plt.show()

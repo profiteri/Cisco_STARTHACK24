@@ -15,7 +15,7 @@ def init():
 
     HEATMAP_SELECTED = True 
     ILLUMINOCITY_SELECTED = True
-    HUMIDITY_SELECTED = False
+    HUMIDITY_SELECTED = True
     USERS_TRACKING_SELECTED = False
 
     MIN_X = MAX_X = MIN_Y = MAX_Y = 0
