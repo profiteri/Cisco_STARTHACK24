@@ -40,8 +40,9 @@ except:
     apiKey = get_API_Key_and_auth()
 
 # overwrite previous log file
-f = open("logs.json", 'r+')
+f = open("logs.json", 'w+')
 f.truncate(0)
+f.write("[")
 
 # Opens a new HTTP session that we can use to terminate firehose onto
 s = requests.Session()
@@ -53,13 +54,26 @@ r = s.get(
 print("Starting Stream")
 for line in r.iter_lines():
     if line:
-    
+
         # decodes payload into useable format
         decoded_line = line.decode('utf-8')
         event = json.loads(decoded_line)
 
+        ### All this crap just to make sure that the log is always a valid list of json objects
+
+        # Check if the file ends with ']'
+        f.seek(0, 2)  # Move the file pointer to the end of the file
+        end_of_file = f.tell()  # Get the current position of the file pointer
+        if end_of_file > 0:
+            f.seek(end_of_file - 1)  # Move the file pointer to the position of the last character
+            last_char = f.read(1)  # Read the last character
+            if last_char == ']':
+                # Replace ']' with ','
+                f.seek(end_of_file - 1)  # Move the file pointer back to the position of the last character
+                f.write(',')  # Write ',' to replace ']'
+
         # writes every event to the logs.json in readible format
-        f.write(str(json.dumps(json.loads(line), indent=4, sort_keys=True)))
+        f.write(str(json.dumps(json.loads(line), indent=4, sort_keys=True)) + "]")
 
         # gets the event type out the JSON event and prints to screen
         eventType = event['eventType']
