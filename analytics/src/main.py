@@ -18,7 +18,7 @@ globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs_short.json")
+    filename = os.path.join("../../data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -72,7 +72,7 @@ devices.analyze_connection_matrix(connection_matrix)
 global all_heatmap_data
 all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
 
-import Cisco_STARTHACK24.analytics.src.illuminance as illuminance
+import illuminance
 # Prepare illumisocity data
 global all_illuminance_data
 all_illuminance_data = illuminance.prepare_illuminance_data(raw_ds)
