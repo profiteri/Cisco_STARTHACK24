@@ -12,13 +12,13 @@ import matplotlib
 import globals
 import devices
 import humidity
-#import illuminance
+import illuminance
 
 globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../../data/logs.json")
+    filename = os.path.join("data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -62,19 +62,23 @@ def draw_humidity(all_data):
     scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax, legend=False, linewidth=0)
     return scatter_plot
     
-def initialize_illuminance(all_illuminance_data, ax):
+def draw_illuminance(all_data, draw_legend):
+    if current_index >= len(all_data):
+        print("Illuminance index out of bound")
+        return
+    glue = pd.DataFrame.from_dict(all_data[current_index])
+    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=300, palette=sns.color_palette("Blues", as_cmap=True), alpha=0.3, ax=ax, legend=draw_legend, linewidth=0)
+    if draw_legend:
+        sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
+    return res
 
-    df_illuminance = pd.DataFrame(all_illuminance_data)
-
-    sc = ax.scatter(df_illuminance['x'], df_illuminance['y'], s=df_illuminance['illum'], c='yellow', alpha=0.6, edgecolors='none')
-    
-    return sc
 # Prepare generic data
 raw_ds              = load_dataset()
 
 # Prepare concrete data
 events_at_timestamp_devices = devices.process_devices_events(raw_ds)
 events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
+events_at_timestamp_illuminance = illuminance.filter_illuminance_events(raw_ds)
 
 connection_matrix = devices.build_connection_matrix(events_at_timestamp_devices)
 devices.analyze_connection_matrix(connection_matrix)
@@ -82,11 +86,9 @@ devices.analyze_connection_matrix(connection_matrix)
 # Prepare heatmap data
 global all_heatmap_data
 all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
-
-import illuminance
 # Prepare illumisocity data
 global all_illuminance_data
-all_illuminance_data = illuminance.prepare_illuminance_data(raw_ds)
+all_illuminance_data = illuminance.prepare_illuminance_data(events_at_timestamp_illuminance)
 
 # Prepare humidity data
 global all_humidity_data
@@ -97,7 +99,7 @@ fig, ax = plt.subplots()
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('../data/test_background.png')
+bg_image = plt.imread('analytics/data/test_background.png')
 
 def draw_background_image():    
     ax.imshow(bg_image,
@@ -132,7 +134,7 @@ def update():
         draw_humidity(all_humidity_data)
         
     if check_states['Illuminance']:
-        initialize_illuminance(all_illuminance_data, ax)
+        draw_illuminance(all_illuminance_data, False)
 
     if check_states['Temperature']:
         draw_kdeplot(all_heatmap_data)
