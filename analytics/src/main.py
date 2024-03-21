@@ -13,8 +13,11 @@ import globals
 import devices
 import humidity
 import illuminance
+import time
 
 globals.init()
+
+start_time = time.time()
 
 def load_dataset():
 
@@ -93,6 +96,10 @@ all_illuminance_data = illuminance.prepare_illuminance_data(events_at_timestamp_
 # Prepare humidity data
 global all_humidity_data
 all_humidity_data = humidity.prepare_humidity_data(events_at_timestamp_humidity)
+
+end_time = time.time()
+
+print(f"Prepared data in {end_time - start_time} seconds")
 
 # Create the initial figure and axis
 fig, ax = plt.subplots()

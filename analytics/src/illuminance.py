@@ -60,7 +60,6 @@ def prepare_illuminance_data(events_at_timestamp):
         for event in events:
             x = int(event["xPos"])
             y = int(event["yPos"])
-            print(event["illuminance"])
             val = int(event["illuminance"]['value'])
             df["x"].append(x)
             df["y"].append(y)
