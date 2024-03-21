@@ -9,7 +9,7 @@ from matplotlib.widgets import Slider
 from matplotlib.widgets import CheckButtons
 
 import globals
-import heatmap
+import devices
 import humidity
 #import illuminocity
 
@@ -17,7 +17,7 @@ globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs.json")
+    filename = os.path.join("../data/logs_short.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -54,12 +54,15 @@ def initialize_humidity(all_data):
 raw_ds              = load_dataset()
 
 # Prepare concrete data
-events_at_timestamp_heatmap = heatmap.filter_heatmap_events(raw_ds)
+events_at_timestamp_devices = devices.process_devices_events(raw_ds)
 events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
+
+connection_matrix = devices.build_connection_matrix(events_at_timestamp_devices)
+devices.analyze_connection_matrix(connection_matrix)
 
 # Prepare heatmap data
 global all_heatmap_data
-all_heatmap_data    = heatmap.prepare_heatmap_data(events_at_timestamp_heatmap)
+all_heatmap_data    = humidity.prepare_devices_data(events_at_timestamp_devices)
 
 # Prepare illumisocity data
 global all_illumisocity_data
