@@ -7,7 +7,8 @@ import os
 import json
 from matplotlib.widgets import Slider
 from matplotlib.widgets import CheckButtons
-
+import pandas as pd
+import matplotlib
 import globals
 import heatmap
 import humidity
@@ -27,12 +28,11 @@ def draw_scatterplot(all_data):
     c = pal.as_hex()[len(pal) // 2 - 2]
     return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
 
-
-def draw_kdeplot(all_data):
-    return sns.kdeplot(data=all_data[current_index], x="x", y="y",
+def draw_kdeplot(all_data, data_key='current_index', value_x='x', value_y='y', cmap='Reds'):
+    return sns.kdeplot(data=all_data[data_key], x=value_x, y=value_y,
                        bw_adjust=0.2, levels=20,
-                       clip = ((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
-                       cmap="Reds", fill=True, alpha=0.4, ax=ax)
+                       clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
+                       cmap=cmap, fill=True, alpha=0.4, ax=ax)
 
 def draw_humudity(all_data, draw_legend):
     if current_index >= len(all_data):
@@ -43,7 +43,14 @@ def draw_humudity(all_data, draw_legend):
     if draw_legend:
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
+    
+def initialize_illuminocity(all_illuminocity_data, ax):
 
+    df_illuminocity = pd.DataFrame(all_illuminocity_data)
+
+    sc = ax.scatter(df_illuminocity['x'], df_illuminocity['y'], s=df_illuminocity['illum'], c='yellow', alpha=0.6, edgecolors='none')
+    
+    return sc
 # Prepare generic data
 raw_ds              = load_dataset()
 
@@ -55,9 +62,10 @@ events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
 global all_heatmap_data
 all_heatmap_data    = heatmap.prepare_heatmap_data(events_at_timestamp_heatmap)
 
+import illuminocity
 # Prepare illumisocity data
-global all_illumisocity_data
-# ...
+global all_illuminocity_data
+all_illuminocity_data = illuminocity.prepare_illuminocity_data(raw_ds)
 
 # Prepare humidity data
 global all_humidity_data
@@ -68,7 +76,7 @@ fig, ax = plt.subplots()
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('../data/test_background.png')
+bg_image = plt.imread('data/test_background.png')
 
 # Plot the background image
 ax.imshow(bg_image,
@@ -109,7 +117,7 @@ def update():
             draw_humudity(all_humidity_data, False)
         
     if check_states['Illuminocity']:
-        draw_kdeplot(all_heatmap_data)
+        initialize_illuminocity(all_illuminocity_data, ax)
 
     if check_states['Temperature']:
         # TODO
