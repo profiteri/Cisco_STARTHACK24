@@ -18,7 +18,7 @@ globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs_short.json")
+    filename = os.path.join("../data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -63,7 +63,7 @@ devices.analyze_connection_matrix(connection_matrix)
 
 # Prepare heatmap data
 global all_heatmap_data
-all_heatmap_data    = humidity.prepare_devices_data(events_at_timestamp_devices)
+all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
 
 import illuminocity
 # Prepare illumisocity data
@@ -79,7 +79,7 @@ fig, ax = plt.subplots()
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('data/test_background.png')
+bg_image = plt.imread('../data/test_background.png')
 
 # Plot the background image
 ax.imshow(bg_image,
