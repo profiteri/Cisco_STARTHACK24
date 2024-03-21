@@ -102,7 +102,7 @@ def prepare_devices_data(events_at_timestamp):
             y = int(event["deviceLocationUpdate"]["yPos"])
             df["x"].append(x)
             df["y"].append(y)
-            df["employee"].append(event["deviceLocationUpdate"]["deviceClassification"] == "EMPLOYEE")
+            df["employee"].append("Employee" if event["deviceLocationUpdate"]["deviceClassification"] == "EMPLOYEE" else "Customer")
 
         all_data.append(df)
 

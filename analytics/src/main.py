@@ -29,11 +29,24 @@ color_employee = crest.as_hex()[len(crest) // 2 - 2]
 flare = sns.color_palette("flare")
 color_customer = flare.as_hex()[len(flare) // 2 - 2]
 
-scatter_palette = {True: color_employee, False: color_customer}
+scatter_palette = {"Employee": color_employee, "Customer": color_customer}
 
 def draw_scatterplot(all_data):
     df = all_data[current_index]
-    return sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, ax=ax)
+    scatter_plot = sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, legend='auto', ax=ax)
+    
+    ### All this crap just to make sure that legend always looks the same...
+    handles, labels = scatter_plot.get_legend_handles_labels()
+    # Create a dictionary mapping labels to handles
+    label_to_handle = dict(zip(labels, handles))
+    # Sort the labels
+    sorted_labels = sorted(labels)
+    # Get sorted handles based on sorted labels
+    sorted_handles = [label_to_handle[label] for label in sorted_labels]
+    # Update the legend with the sorted handles and labels
+    scatter_plot.legend(sorted_handles, sorted_labels, loc='upper left')
+
+    return scatter_plot
 
 def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
     return sns.kdeplot(data=all_data[current_index], x=value_x, y=value_y,
@@ -88,11 +101,11 @@ current_index = 0
 # Load bg image
 bg_image = plt.imread('../data/test_background.png')
 
-# Plot the background image
-ax.imshow(bg_image,
-        aspect='auto',
-        extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
-ax.axis('off')
+def draw_background_image():    
+    ax.imshow(bg_image,
+            aspect='auto',
+            extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
+    ax.axis('off')
 
 # Set the limits for the x and y axes to prevent the graph from changing height
 ax.set_xlim(globals.MIN_X, globals.MAX_X)
@@ -112,8 +125,8 @@ def move_slider(val):
 
 def update():
 
-    for artist in ax.collections:
-        artist.remove()
+    ax.clear()
+    draw_background_image()
 
     global check_states
 
@@ -148,5 +161,7 @@ def toggle_checkbox(label):
     update()
 
 checkboxes.on_clicked(toggle_checkbox)
+
+update()
 
 plt.show()
