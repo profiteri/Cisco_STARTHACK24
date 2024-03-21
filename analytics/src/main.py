@@ -12,7 +12,7 @@ import matplotlib
 import globals
 import devices
 import humidity
-#import illuminocity
+#import illuminance
 
 globals.init()
 
@@ -51,11 +51,11 @@ def draw_humudity(all_data, draw_legend):
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
     
-def initialize_illuminocity(all_illuminocity_data, ax):
+def initialize_illuminance(all_illuminance_data, ax):
 
-    df_illuminocity = pd.DataFrame(all_illuminocity_data)
+    df_illuminance = pd.DataFrame(all_illuminance_data)
 
-    sc = ax.scatter(df_illuminocity['x'], df_illuminocity['y'], s=df_illuminocity['illum'], c='yellow', alpha=0.6, edgecolors='none')
+    sc = ax.scatter(df_illuminance['x'], df_illuminance['y'], s=df_illuminance['illum'], c='yellow', alpha=0.6, edgecolors='none')
     
     return sc
 # Prepare generic data
@@ -72,10 +72,10 @@ devices.analyze_connection_matrix(connection_matrix)
 global all_heatmap_data
 all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
 
-import illuminocity
+import Cisco_STARTHACK24.analytics.src.illuminance as illuminance
 # Prepare illumisocity data
-global all_illuminocity_data
-all_illuminocity_data = illuminocity.prepare_illuminocity_data(raw_ds)
+global all_illuminance_data
+all_illuminance_data = illuminance.prepare_illuminance_data(raw_ds)
 
 # Prepare humidity data
 global all_humidity_data
@@ -124,8 +124,8 @@ def update():
         else:
             draw_humudity(all_humidity_data, False)
         
-    if check_states['Illuminocity']:
-        initialize_illuminocity(all_illuminocity_data, ax)
+    if check_states['Illuminance']:
+        initialize_illuminance(all_illuminance_data, ax)
 
     if check_states['Temperature']:
         draw_kdeplot(all_heatmap_data)
@@ -139,7 +139,7 @@ def update():
 
 slider.on_changed(move_slider)
 
-check_states = {'Humidity': False, 'Illuminocity': False, 'Temperature': False, 'Occupation': False}
+check_states = {'Humidity': False, 'Illuminance': False, 'Temperature': False, 'Occupation': False}
 check_ax = plt.axes([0.05, 0.4, 0.1, 0.15])  # [left, bottom, width, height]
 checkboxes = CheckButtons(check_ax, check_states.keys(), check_states.values())
 
