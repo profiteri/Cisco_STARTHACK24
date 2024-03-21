@@ -23,10 +23,17 @@ def load_dataset():
         json_list = json.load(file)
         return json_list
 
+crest = sns.color_palette("crest")
+color_employee = crest.as_hex()[len(crest) // 2 - 2]
+
+flare = sns.color_palette("flare")
+color_customer = flare.as_hex()[len(flare) // 2 - 2]
+
+scatter_palette = {True: color_employee, False: color_customer}
+
 def draw_scatterplot(all_data):
-    pal = sns.color_palette("flare")
-    c = pal.as_hex()[len(pal) // 2 - 2]
-    return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
+    df = all_data[current_index]
+    return sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, ax=ax)
 
 def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
     return sns.kdeplot(data=all_data[current_index], x=value_x, y=value_y,

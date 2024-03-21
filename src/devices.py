@@ -96,12 +96,13 @@ def prepare_devices_data(events_at_timestamp):
     events_at_timestamp = dict(sorted(events_at_timestamp.items()))
 
     for events in events_at_timestamp.values():
-        df = {"x": list(), "y": list()}
+        df = {"x": list(), "y": list(), "employee": list()}
         for event in events:
             x = int(event["deviceLocationUpdate"]["xPos"])
             y = int(event["deviceLocationUpdate"]["yPos"])
             df["x"].append(x)
             df["y"].append(y)
+            df["employee"].append(event["deviceLocationUpdate"]["deviceClassification"] == "EMPLOYEE")
 
         all_data.append(df)
 
