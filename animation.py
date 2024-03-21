@@ -6,7 +6,7 @@ from matplotlib.pyplot import imread
 
 # Load the heatmap data
 heatmaps = np.load('./multiple_heatmap_data.npy')
-background_pic = imread('./test_background.jpg')
+background_pic = imread('./test_background.png')
 
 # Animation parameters
 FRAMES_START = 0
