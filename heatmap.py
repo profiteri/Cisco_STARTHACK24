@@ -70,7 +70,10 @@ ax.imshow(bg_image,
            extent=[min_x, max_x, min_y, max_y])
 
 # Plot the initial KDE plot
-kde_plot = sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
+def draw_kdeplot():
+    return sns.kdeplot(data=all_data[current_index], x="x", y="y", bw_adjust=0.2, cmap="Reds", fill=True, alpha=0.4, ax=ax)
+
+kde_plot = draw_kdeplot()
 
 ax.axis('off')
 
@@ -90,7 +93,7 @@ def update(val):
     for artist in ax.collections:
         artist.remove()
     # Plot the KDE plot without clearing the background image
-    sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
+    draw_kdeplot()
     # Ensure the x and y limits remain the same after updating the plot
     ax.set_xlim(min_x, max_x)
     ax.set_ylim(min_y, max_y)
