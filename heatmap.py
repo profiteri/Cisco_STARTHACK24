@@ -1,7 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import pickle as pkl
 import os
 import json
 
@@ -25,25 +24,20 @@ for obj in json_list:
         device_location_update = obj["deviceLocationUpdate"]
         pos_x = device_location_update["xPos"]
         pos_y = device_location_update["yPos"]
-        if min_x == None or min_x > pos_x:
+        if min_x is None or min_x > pos_x:
             min_x = pos_x
 
-        if max_x == None or max_x < pos_x:
+        if max_x is None or max_x < pos_x:
             max_x = pos_x
 
-        if min_y == None or min_y > pos_y:
+        if min_y is None or min_y > pos_y:
             min_y = pos_y
 
-        if max_y == None or max_y < pos_y:
+        if max_y is None or max_y < pos_y:
             max_y = pos_y
 
-        if timestamp_granularity > 0:
-            ts = int(str(obj["recordTimestamp"])[:-timestamp_granularity])
-        else:
-            ts = obj["recordTimestamp"]
-        if ts not in events_at_timestamp:
-            events_at_timestamp[ts] = []
-        events_at_timestamp[ts].append(obj)
+        ts = obj["recordTimestamp"] // (10 ** timestamp_granularity) if timestamp_granularity > 0 else obj["recordTimestamp"]
+        events_at_timestamp.setdefault(ts, []).append(obj)
 
 print(f"{len(events_at_timestamp)}/{total_events}")
 print(f"x: {min_x} - {max_x}")
@@ -56,16 +50,12 @@ location_precision = 50
 all_data = []
 
 for events in list(events_at_timestamp.values())[:10]:
-    # data = np.zeros((int(max_x) // location_precision + 1, int(max_y) // location_precision + 1))
-    df = {"x": list(), "y": list()}
+    df = {"x": [], "y": []}
     for event in events:
-        x = int(event["deviceLocationUpdate"]["xPos"]) // location_precision
-        y = int(event["deviceLocationUpdate"]["yPos"]) // location_precision
+        x = event["deviceLocationUpdate"]["xPos"] // location_precision
+        y = event["deviceLocationUpdate"]["yPos"] // location_precision
         df["x"].append(x)
         df["y"].append(y)
-
-    # data = np.where(data == 0, np.nan, data)
-
     all_data.append(df)
 
 # Create the initial figure and axis
@@ -77,13 +67,17 @@ bg_image = plt.imread('test_background.png')
 # Plot the background image
 ax.imshow(bg_image,
            aspect='auto',
-           extent=[int(min_x) // location_precision,
-                   int(max_x) // location_precision,
-                   int(min_y) // location_precision,
-                   int(max_y) // location_precision])
+           extent=[min_x // location_precision,
+                   max_x // location_precision,
+                   min_y // location_precision,
+                   max_y // location_precision])
 
 # Plot the initial KDE plot
 kde_plot = sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
+
+# Set the limits for the x and y axes to prevent the graph from changing height
+ax.set_xlim(min_x // location_precision, max_x // location_precision)
+ax.set_ylim(min_y // location_precision, max_y // location_precision)
 
 # Add a slider for timeline navigation
 ax_slider = plt.axes([0.2, 0.05, 0.65, 0.03])  # [left, bottom, width, height]
@@ -93,14 +87,14 @@ slider = Slider(ax_slider, 'Timeline', 0, len(all_data) - 1, valinit=0, valstep=
 def update(val):
     global current_index
     current_index = int(slider.val)
-    ax.clear()
-    ax.imshow(bg_image,
-               aspect='auto',
-               extent=[int(min_x) // location_precision,
-                       int(max_x) // location_precision,
-                       int(min_y) // location_precision,
-                       int(max_y) // location_precision])
+    # Remove only the KDE plot, not the background image
+    for artist in ax.collections:
+        artist.remove()
+    # Plot the KDE plot without clearing the background image
     sns.kdeplot(data=all_data[current_index], x="x", y="y", cmap="Reds", fill=True, alpha=0.4, ax=ax)
+    # Ensure the x and y limits remain the same after updating the plot
+    ax.set_xlim(min_x // location_precision, max_x // location_precision)
+    ax.set_ylim(min_y // location_precision, max_y // location_precision)
     plt.draw()
 
 slider.on_changed(update)
