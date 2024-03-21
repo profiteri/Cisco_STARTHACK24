@@ -1,4 +1,4 @@
 *.json
 API_KEY.txt
 .venv/
-__pycache__/
+src/__pycache__/
