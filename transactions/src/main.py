@@ -1,17 +1,19 @@
-import matplotlib.pyplot as plt
+from walker import walk, get_closer_to_first, get_closer_to_second
+from threading import Thread
+from flask import Flask
 
-# Create the initial figure and axis
-fig, ax = plt.subplots()
+app = Flask(__name__)
 
-# Load bg image
-bg_image = plt.imread('../data/test_background.png')
+@app.route('/')
+def hello_world():
+    res = "closer to first: " + get_closer_to_first() + '\n'
+    res += "closer to second: " + get_closer_to_second()
+    print("closer to first: ", get_closer_to_first())
+    print("closer to second: ", get_closer_to_second())
+    return res
 
-# Plot the background image
-ax.imshow(bg_image,
-        aspect='auto',
-        extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
-ax.axis('off')
-
-# Set the limits for the x and y axes to prevent the graph from changing height
-ax.set_xlim(globals.MIN_X, globals.MAX_X)
-ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
+if __name__ == '__main__':
+    t1 = Thread(target=lambda: app.run(host="0.0.0.0", port=5001, use_reloader=False))
+    t1.start()
+    walk()
+    t1.join()
