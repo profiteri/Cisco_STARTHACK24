@@ -3,7 +3,7 @@ import globals
 # def filter_illuminocity_events(raw_ds):
 #     pass
 
-def prepare_illuminocity_data(dataset):
+def prepare_illuminance_data(dataset):
     all_data = []
     for event in dataset:
         if event['eventType'] == 'IOT_TELEMETRY' and 'illuminance' in event['iotTelemetry']:

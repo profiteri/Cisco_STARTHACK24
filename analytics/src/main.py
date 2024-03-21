@@ -12,24 +12,44 @@ import matplotlib
 import globals
 import devices
 import humidity
-#import illuminocity
+#import illuminance
 
 globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs.json")
+    filename = os.path.join("../../data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
 
-def draw_scatterplot(all_data):
-    pal = sns.color_palette("flare")
-    c = pal.as_hex()[len(pal) // 2 - 2]
-    return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
+crest = sns.color_palette("crest")
+color_employee = crest.as_hex()[len(crest) // 2 - 2]
 
-def draw_kdeplot(all_data, data_key='current_index', value_x='x', value_y='y', cmap='Reds'):
-    return sns.kdeplot(data=all_data[data_key], x=value_x, y=value_y,
+flare = sns.color_palette("flare")
+color_customer = flare.as_hex()[len(flare) // 2 - 2]
+
+scatter_palette = {"Employee": color_employee, "Customer": color_customer}
+
+def draw_scatterplot(all_data):
+    df = all_data[current_index]
+    scatter_plot = sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, legend='auto', ax=ax)
+    
+    ### All this crap just to make sure that legend always looks the same...
+    handles, labels = scatter_plot.get_legend_handles_labels()
+    # Create a dictionary mapping labels to handles
+    label_to_handle = dict(zip(labels, handles))
+    # Sort the labels
+    sorted_labels = sorted(labels)
+    # Get sorted handles based on sorted labels
+    sorted_handles = [label_to_handle[label] for label in sorted_labels]
+    # Update the legend with the sorted handles and labels
+    scatter_plot.legend(sorted_handles, sorted_labels, loc='upper left')
+
+    return scatter_plot
+
+def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
+    return sns.kdeplot(data=all_data[current_index], x=value_x, y=value_y,
                        bw_adjust=0.2, levels=20,
                        clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
                        cmap=cmap, fill=True, alpha=0.4, ax=ax)
@@ -44,11 +64,11 @@ def draw_humudity(all_data, draw_legend):
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
     
-def initialize_illuminocity(all_illuminocity_data, ax):
+def initialize_illuminance(all_illuminance_data, ax):
 
-    df_illuminocity = pd.DataFrame(all_illuminocity_data)
+    df_illuminance = pd.DataFrame(all_illuminance_data)
 
-    sc = ax.scatter(df_illuminocity['x'], df_illuminocity['y'], s=df_illuminocity['illum'], c='yellow', alpha=0.6, edgecolors='none')
+    sc = ax.scatter(df_illuminance['x'], df_illuminance['y'], s=df_illuminance['illum'], c='yellow', alpha=0.6, edgecolors='none')
     
     return sc
 # Prepare generic data
@@ -65,10 +85,10 @@ devices.analyze_connection_matrix(connection_matrix)
 global all_heatmap_data
 all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
 
-import illuminocity
+import illuminance
 # Prepare illumisocity data
-global all_illuminocity_data
-all_illuminocity_data = illuminocity.prepare_illuminocity_data(raw_ds)
+global all_illuminance_data
+all_illuminance_data = illuminance.prepare_illuminance_data(raw_ds)
 
 # Prepare humidity data
 global all_humidity_data
@@ -81,11 +101,11 @@ current_index = 0
 # Load bg image
 bg_image = plt.imread('../data/test_background.png')
 
-# Plot the background image
-ax.imshow(bg_image,
-        aspect='auto',
-        extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
-ax.axis('off')
+def draw_background_image():    
+    ax.imshow(bg_image,
+            aspect='auto',
+            extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
+    ax.axis('off')
 
 # Set the limits for the x and y axes to prevent the graph from changing height
 ax.set_xlim(globals.MIN_X, globals.MAX_X)
@@ -105,29 +125,26 @@ def move_slider(val):
 
 def update():
 
-    global curr_occupation
-
-    for artist in ax.collections:
-        artist.remove()
+    ax.clear()
+    draw_background_image()
 
     global check_states
 
     if check_states['Humidity']:
         if globals.HUMIDITY_INITIALIZED == False:
-            draw_humudity(all_humidity_data, True)
+            draw_humudity(all_humidity_data, False)
             globals.HUMIDITY_INITIALIZED = True
         else:
             draw_humudity(all_humidity_data, False)
         
-    if check_states['Illuminocity']:
-        initialize_illuminocity(all_illuminocity_data, ax)
+    if check_states['Illuminance']:
+        initialize_illuminance(all_illuminance_data, ax)
 
     if check_states['Temperature']:
-        # TODO
-        pass
+        draw_kdeplot(all_heatmap_data)
 
     if check_states['Occupation']:
-        curr_occupation = draw_scatterplot(all_heatmap_data)
+        draw_scatterplot(all_heatmap_data)
         
     ax.set_xlim(globals.MIN_X, globals.MAX_X)
     ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
@@ -135,7 +152,7 @@ def update():
 
 slider.on_changed(move_slider)
 
-check_states = {'Humidity': False, 'Illuminocity': False, 'Temperature': False, 'Occupation': False}
+check_states = {'Humidity': False, 'Illuminance': False, 'Temperature': False, 'Occupation': False}
 check_ax = plt.axes([0.05, 0.4, 0.1, 0.15])  # [left, bottom, width, height]
 checkboxes = CheckButtons(check_ax, check_states.keys(), check_states.values())
 
@@ -144,5 +161,7 @@ def toggle_checkbox(label):
     update()
 
 checkboxes.on_clicked(toggle_checkbox)
+
+update()
 
 plt.show()
