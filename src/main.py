@@ -16,13 +16,22 @@ globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs_short.json")
+    filename = os.path.join("../data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
 
+def draw_scatterplot(all_data):
+    pal = sns.color_palette("flare")
+    c = pal.as_hex()[len(pal) // 2 - 2]
+    return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
+
+
 def draw_kdeplot(all_data):
-    return sns.kdeplot(data=all_data[current_index], x="x", y="y", bw_adjust=0.2, cmap="Reds", fill=True, alpha=0.4, ax=ax)
+    return sns.kdeplot(data=all_data[current_index], x="x", y="y",
+                       bw_adjust=0.2, levels=20,
+                       clip = ((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
+                       cmap="Reds", fill=True, alpha=0.4, ax=ax)
 
 def draw_humudity(all_data):
     glue = pd.DataFrame.from_dict(all_data[current_index]) 
@@ -81,8 +90,9 @@ initialize_heatmap(all_heatmap_data)
 initialize_humidity(all_humidity_data)
 
 # Add a slider for timeline navigation
-ax_slider = plt.axes([0.2, 0.05, 0.65, 0.03])  # [left, bottom, width, height]
-slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1)
+ax_slider = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
+slider = Slider(ax_slider, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
+slider.vline._linewidth = 0
 
 # Update function for slider
 def update(val):
@@ -99,6 +109,8 @@ def update(val):
             
         # Plot the KDE plot without clearing the background image
         draw_kdeplot(all_heatmap_data)
+
+        # draw_scatterplot(all_heatmap_data)
         
         # Ensure the x and y limits remain the same after updating the plot
         ax.set_xlim(globals.MIN_X, globals.MAX_X)
