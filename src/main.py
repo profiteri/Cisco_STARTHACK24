@@ -18,7 +18,7 @@ globals.init()
 
 def load_dataset():
 
-    filename = os.path.join("../data/logs.json")
+    filename = os.path.join("../data/logs_short.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -28,8 +28,8 @@ def draw_scatterplot(all_data):
     c = pal.as_hex()[len(pal) // 2 - 2]
     return sns.scatterplot(data=all_data[current_index], x="x", y="y", color=c, edgecolor=None, alpha=0.4, ax=ax)
 
-def draw_kdeplot(all_data, data_key='current_index', value_x='x', value_y='y', cmap='Reds'):
-    return sns.kdeplot(data=all_data[data_key], x=value_x, y=value_y,
+def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
+    return sns.kdeplot(data=all_data[current_index], x=value_x, y=value_y,
                        bw_adjust=0.2, levels=20,
                        clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
                        cmap=cmap, fill=True, alpha=0.4, ax=ax)
@@ -105,8 +105,6 @@ def move_slider(val):
 
 def update():
 
-    global curr_occupation
-
     for artist in ax.collections:
         artist.remove()
 
@@ -114,7 +112,7 @@ def update():
 
     if check_states['Humidity']:
         if globals.HUMIDITY_INITIALIZED == False:
-            draw_humudity(all_humidity_data, True)
+            draw_humudity(all_humidity_data, False)
             globals.HUMIDITY_INITIALIZED = True
         else:
             draw_humudity(all_humidity_data, False)
@@ -123,11 +121,10 @@ def update():
         initialize_illuminocity(all_illuminocity_data, ax)
 
     if check_states['Temperature']:
-        # TODO
-        pass
+        draw_kdeplot(all_heatmap_data)
 
     if check_states['Occupation']:
-        curr_occupation = draw_scatterplot(all_heatmap_data)
+        draw_scatterplot(all_heatmap_data)
         
     ax.set_xlim(globals.MIN_X, globals.MAX_X)
     ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
