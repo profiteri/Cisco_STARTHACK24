@@ -6,8 +6,15 @@ def distance(pos1, pos2):
 
 all_devices = dict()
 
+def discretize_timestamp(orig_ts):
+    if globals.TIMESTAMP_GRANULARITY > 0:
+        return int(str(orig_ts)[:-globals.TIMESTAMP_GRANULARITY])
+    else:
+        return orig_ts
+
+
 def process_devices_events(raw_ds):
-    
+    stats_at_timestamp = dict()
     events_at_timestamp = dict()
     total_events = 0
     for obj in raw_ds:
@@ -16,16 +23,23 @@ def process_devices_events(raw_ds):
             device_location_update = obj["deviceLocationUpdate"]
 
             mac = device_location_update["device"]["macAddress"]
-            ts = obj["recordTimestamp"]
+            ts = discretize_timestamp(obj["recordTimestamp"])
+            employee = device_location_update["deviceClassification"] == "EMPLOYEE"
             if mac not in all_devices:
-                device_data = {"id": len(all_devices),
-                               "employee": device_location_update["deviceClassification"] == "EMPLOYEE",
+                id = len(all_devices)
+                device_data = {"id": id,
+                               "employee": employee,
                                "first_ts": ts,
                                "last_ts": ts}
                 all_devices[mac] = device_data
             else:
+                id = all_devices[mac]["id"]
                 all_devices[mac]["first_ts"] = min(all_devices[mac]["first_ts"], ts)
                 all_devices[mac]["last_ts"] = max(all_devices[mac]["last_ts"], ts)
+            
+            if ts not in stats_at_timestamp:
+                stats_at_timestamp[ts] = {"employee_ids": set(), "customer_ids": set()}
+            stats_at_timestamp[ts]["employee_ids" if employee else "customer_ids"].add(id)
 
             pos_x = device_location_update["xPos"]
             pos_y = device_location_update["yPos"]
@@ -39,10 +53,6 @@ def process_devices_events(raw_ds):
             if globals.MAX_Y == None or globals.MAX_Y < pos_y:
                 globals.MAX_Y = pos_y
 
-            if globals.TIMESTAMP_GRANULARITY > 0:
-                ts = int(str(obj["recordTimestamp"])[:-globals.TIMESTAMP_GRANULARITY])
-            else:
-                ts = obj["recordTimestamp"]
             if ts not in events_at_timestamp:
                 events_at_timestamp[ts] = []
             events_at_timestamp[ts].append(obj)
@@ -51,49 +61,53 @@ def process_devices_events(raw_ds):
     print(f"x: {globals.MIN_X} - {globals.MAX_X}")
     print(f"y: {globals.MIN_Y} - {globals.MAX_Y}")
 
-    return events_at_timestamp
+    events_at_timestamp = dict(sorted(events_at_timestamp.items()))
 
-def build_connection_matrix(events_at_timestamp):
+    return events_at_timestamp, stats_at_timestamp
+
+def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):
     threshold = 2.0
     connection_matrix = np.zeros((len(all_devices), len(all_devices)), dtype=bool)
-    for events in events_at_timestamp.values():
+    for ts, events in events_at_timestamp.items():
         for event1 in events:
             pos1 = (event1["deviceLocationUpdate"]["xPos"], event1["deviceLocationUpdate"]["yPos"])
             id1 = all_devices[event1["deviceLocationUpdate"]["device"]["macAddress"]]["id"]
+            employee1 = all_devices[event1["deviceLocationUpdate"]["device"]["macAddress"]]["employee"]
             for event2 in events:
                 pos2 = (event2["deviceLocationUpdate"]["xPos"], event2["deviceLocationUpdate"]["yPos"])
                 id2 = all_devices[event2["deviceLocationUpdate"]["device"]["macAddress"]]["id"]
+                employee2 = all_devices[event2["deviceLocationUpdate"]["device"]["macAddress"]]["employee"]
                 dist = distance(pos1, pos2)
-                if dist <= threshold and id1 != id2:
+                if dist <= threshold and employee1 != employee2:
                     connection_matrix[id1][id2] = True
-    return connection_matrix
+        analyze_connection_matrix(connection_matrix, ts, stats_at_timestamp)
 
 
-def analyze_connection_matrix(connection_matrix):
-    num_devices = len(all_devices)
-    num_employees = sum(1 for device_data in all_devices.values() if device_data["employee"])
+def analyze_connection_matrix(connection_matrix, ts, stats_at_timestamp):
     num_approached_customers = 0
+    num_active_employees = 0
     all_time_spent = []
     for device_data in all_devices.values():
-        if device_data["employee"]:
-            continue
         approached = sum(connection_matrix[device_data["id"]])
-        num_approached_customers += approached > 0
-        time_spent = device_data["last_ts"] - device_data["first_ts"]
-        if time_spent > 0:
-            all_time_spent.append(time_spent)
+        if device_data["employee"]:
+            num_active_employees += approached > 0
+        else:
+            num_approached_customers += approached > 0
+            if ts >= device_data["first_ts"]:
+                time_spent = min(ts, device_data["last_ts"]) - device_data["first_ts"]
+                if time_spent > 0:
+                    all_time_spent.append(time_spent)
 
-    print(f"Total employees: {num_employees}")
-    total_customers = num_devices - num_employees
-    print(f"Total customers: {total_customers}")
-    print(f"Approached customers: {num_approached_customers} => {num_approached_customers / (total_customers) * 100}%")
-    print(f"Average time spent: {sum(all_time_spent) / len(all_time_spent)}")
-    
+    stats_at_timestamp[ts]["approached_customers"] = num_approached_customers
+    stats_at_timestamp[ts]["active_employees"] = num_active_employees
+    stats_at_timestamp[ts]["avg_time"] = sum(all_time_spent) / len(all_time_spent) if len(all_time_spent) else 0
+
+    stats_at_timestamp[ts]["num_employees"] = len(stats_at_timestamp[ts]["employee_ids"])
+    stats_at_timestamp[ts]["num_customers"] = len(stats_at_timestamp[ts]["customer_ids"])
     
 def prepare_devices_data(events_at_timestamp):
 
     all_data = []
-    events_at_timestamp = dict(sorted(events_at_timestamp.items()))
 
     for events in events_at_timestamp.values():
         df = {"x": list(), "y": list(), "employee": list()}
