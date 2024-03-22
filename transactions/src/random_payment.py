@@ -14,7 +14,7 @@ def random_payment():
         "currency": random.choice(["USD", "EUR", "GBP"]),
         "recipient": "Merchant {}".format(random.randint(1, 100)),
         "status": "pending",
-        "station": random.choice([1, 2])
+        "station": 1
     }
     # Convert the payment details into a JSON formatted string
     payment_json = json.dumps(payment_details)

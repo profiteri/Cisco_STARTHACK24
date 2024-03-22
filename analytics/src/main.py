@@ -21,7 +21,7 @@ start_time = time.time()
 
 def load_dataset():
 
-    filename = os.path.join("data/logs.json")
+    filename = os.path.join("analytics/data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -171,7 +171,7 @@ def update():
     if check_states['Temperature']:
         draw_kdeplot(all_heatmap_data)
 
-    if check_states['Occupation']:
+    if check_states['Occupancy']:
         draw_scatterplot(all_heatmap_data)
         
     ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
@@ -206,7 +206,7 @@ def update():
 
 slider.on_changed(move_slider)
 
-check_states = {'Humidity': False, 'Illuminance': False, 'Temperature': False, 'Occupation': False}
+check_states = {'Humidity': False, 'Illuminance': False, 'Temperature': False, 'Occupancy': False}
 check_ax = plt.axes([0.05, 0.4, 0.1, 0.15])  # [left, bottom, width, height]
 checkboxes = CheckButtons(check_ax, check_states.keys(), check_states.values())
 

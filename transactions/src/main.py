@@ -8,6 +8,7 @@ import time
 
 import os
 from dotenv import load_dotenv
+load_dotenv()
 import telegram
 import requests
 from telegram.ext import Application
@@ -18,9 +19,6 @@ from flask import request
 
 app = Flask(__name__)
 client = AsyncOpenAI()
-load_dotenv()
-
-
 
 # Hardcoded data for two users
 user_data = [
