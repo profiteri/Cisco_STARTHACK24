@@ -50,7 +50,14 @@ def filter_humidity_events(raw_ds):
         if ind < len(globals.DEVICES_COORDINATES):
             coord = globals.DEVICES_COORDINATES[ind]
         else:
-            continue            
+            ts = globals.best_key(events_at_timestamp)
+            if ts == None:
+                continue
+            if not (ts in events_at_timestamp):
+                events_at_timestamp[ts] = []
+                coord = globals.DEVICES_COORDINATES[0]
+            else:
+                coord = globals.DEVICES_COORDINATES[len(events_at_timestamp[ts])]       
 
         new_obj = dict()
         new_obj["xPos"] = coord[0]
