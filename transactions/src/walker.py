@@ -55,7 +55,7 @@ def walk():
     fig, ax = plt.subplots()
 
     # Load bg image
-    bg_image = plt.imread('../data/test_background.png')
+    bg_image = plt.imread('transactions/data/test_background.png')
 
     # Plot the background image
     ax.imshow(bg_image,
