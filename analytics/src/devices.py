@@ -71,14 +71,21 @@ def process_devices_events(raw_ds):
 peak_time = None
 off_peak_time = None
 
+customers_until_now = set()
+employees_until_now = set()
+
 def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):
-    threshold = 2.0
+    threshold = 3.0
     connection_matrix = np.zeros((len(all_devices), len(all_devices)), dtype=bool)
     for i, (ts, events) in enumerate(events_at_timestamp.items()):
         for event1 in events:
             pos1 = (event1["deviceLocationUpdate"]["xPos"], event1["deviceLocationUpdate"]["yPos"])
             id1 = all_devices[event1["deviceLocationUpdate"]["device"]["macAddress"]]["id"]
             employee1 = all_devices[event1["deviceLocationUpdate"]["device"]["macAddress"]]["employee"]
+            if employee1:
+                employees_until_now.add(id1)
+            else:
+                customers_until_now.add(id1)
             for event2 in events:
                 pos2 = (event2["deviceLocationUpdate"]["xPos"], event2["deviceLocationUpdate"]["yPos"])
                 id2 = all_devices[event2["deviceLocationUpdate"]["device"]["macAddress"]]["id"]
@@ -90,6 +97,8 @@ def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):
         stats_at_timestamp[ts]["num_employees"] = len(stats_at_timestamp[ts]["employee_ids"])
         num_customers = len(stats_at_timestamp[ts]["customer_ids"])
         stats_at_timestamp[ts]["num_customers"] = num_customers
+        stats_at_timestamp[ts]["num_customers_until_now"] = len(customers_until_now)
+        stats_at_timestamp[ts]["num_employees_until_now"] = len(employees_until_now)
 
         global peak_time
         if peak_time is None or peak_time[1] <= num_customers:

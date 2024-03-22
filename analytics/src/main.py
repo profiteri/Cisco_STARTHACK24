@@ -28,9 +28,11 @@ def load_dataset():
 
 crest = sns.color_palette("crest")
 color_employee = crest.as_hex()[len(crest) // 2 - 2]
+color_active_employee = crest.as_hex()[len(crest) // 2]
 
 flare = sns.color_palette("flare")
 color_customer = flare.as_hex()[len(flare) // 2 - 2]
+color_approached_customer = flare.as_hex()[len(flare) // 2]
 
 scatter_palette = {"Employee": color_employee, "Customer": color_customer}
 
@@ -105,16 +107,17 @@ print(f"Prepared data in {end_time - start_time} seconds")
 
 
 fig = plt.figure(figsize=(10, 5))
-gs = fig.add_gridspec(2, 3, width_ratios=[6, 2, 2], height_ratios=[3, 2])
+# gs = fig.add_gridspec(2, 3, width_ratios=[4, 1, 1], height_ratios=[3, 2])
+gs = fig.add_gridspec(3, 2, width_ratios=[4, 1], height_ratios=[1, 1, 1])
 
 # Plot on the first subplot (top left)
 ax_map = fig.add_subplot(gs[:, 0])
 
 ax_customers = fig.add_subplot(gs[0, 1])
 
-ax_employees = fig.add_subplot(gs[0, 2])
+ax_employees = fig.add_subplot(gs[1, 1])
 
-ax_time = fig.add_subplot(gs[1, 1:])
+ax_time = fig.add_subplot(gs[2, 1])
 
 current_index = 0
 
@@ -174,19 +177,27 @@ def update():
     ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
     ax_map.set_ylim(globals.MIN_Y, globals.MAX_Y)
 
+    stats = list(stats_at_timestamp.values())[current_index]
+
+    ax_customers.clear()
+    ax_customers.axis('off')
+    ax_customers.pie([stats["approached_customers"], stats["num_customers_until_now"]], labels=["Approached customers", ""], colors=[color_approached_customer, color_customer], autopct='%.0f%%', startangle=280)
+    ax_customers.axis('equal')
+
+    ax_employees.clear()
+    ax_employees.axis('off')
+    ax_employees.pie([stats["active_employees"], stats["num_employees_until_now"]], labels=["Involved employees", ""], colors=[color_active_employee, color_employee], autopct='%.0f%%', startangle=280)
+    ax_employees.axis('equal')
+
     slider.valtext.set_text(f"{globals.END_TIME}:00")
-
-
     ax_time.clear()
     ax_time.axis('off')
-    stats = list(stats_at_timestamp.values())[current_index]
     avg_time = stats['avg_time']
     stats_time = f"Average visit duration: "
     stats_time += f"< {globals.MINUTES_PER_TIMESTAMP:.0f} mins" if avg_time == 0.0 else f"{(avg_time * globals.MINUTES_PER_TIMESTAMP):.0f} mins"
     stats_time += f"\nPeak time: {timestamp_to_time(stats['peak_time'][0])} - {stats['peak_time'][1]} visitors"
     stats_time += f"\nOff-peak time: {timestamp_to_time(stats['off_peak_time'][0])} - {stats['off_peak_time'][1]} visitors"
     ax_time.text(0.5, 0.5, stats_time, ha='center', va='center')
-
     curr_time_ax.clear()
     curr_time_ax.axis('off')
     curr_time_ax.text(0.5, 0.5, timestamp_to_time(current_index), transform=curr_time_ax.transAxes, va='center', ha='center')
