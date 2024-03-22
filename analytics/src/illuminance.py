@@ -23,11 +23,6 @@ def filter_illuminance_events(raw_ds):
         pos_x = location_update["xPos"]
         pos_y = location_update["yPos"]
 
-        new_obj = dict()
-        new_obj["xPos"] = pos_x
-        new_obj["yPos"] = pos_y
-        new_obj["illuminance"] = obj["iotTelemetry"]["illuminance"]
-
         if globals.MIN_X == None or globals.MIN_X > pos_x:
             globals.MIN_X = pos_x
         if globals.MAX_X == None or globals.MAX_X < pos_x:
@@ -43,6 +38,18 @@ def filter_illuminance_events(raw_ds):
             ts = obj["recordTimestamp"]
         if ts not in events_at_timestamp:
             events_at_timestamp[ts] = []
+
+        ind = len(events_at_timestamp[ts])
+        if ind < len(globals.DEVICES_COORDINATES):
+            coord = globals.DEVICES_COORDINATES[ind]
+        else:
+            continue
+
+        new_obj = dict()
+        new_obj["xPos"] = coord[0]
+        new_obj["yPos"] = coord[1]
+        new_obj["illuminance"] = obj["iotTelemetry"]["illuminance"]
+
         events_at_timestamp[ts].append(new_obj)
 
     print(f"illuminance: {len(events_at_timestamp)}/{total_events}")
@@ -60,7 +67,6 @@ def prepare_illuminance_data(events_at_timestamp):
         for event in events:
             x = int(event["xPos"])
             y = int(event["yPos"])
-            print(event["illuminance"])
             val = int(event["illuminance"]['value'])
             df["x"].append(x)
             df["y"].append(y)
