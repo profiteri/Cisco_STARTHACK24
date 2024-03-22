@@ -1,10 +1,5 @@
 def init():
     global TIMESTAMP_GRANULARITY
-    global LOCATION_PRECISION
-    global HEATMAP_SELECTED
-    global ILLUMINOCITY_SELECTED
-    global HUMIDITY_SELECTED
-    global USERS_TRACKING_SELECTED
     global MIN_X
     global MAX_X
     global MIN_Y
@@ -13,8 +8,16 @@ def init():
 
     global DEVICES_COORDINATES
 
+    global START_TIME
+    START_TIME = 8
+
+    global END_TIME
+    END_TIME = 20
+
+    global MINUTES_PER_TIMESTAMP
+    MINUTES_PER_TIMESTAMP = 0
+
     TIMESTAMP_GRANULARITY = 5
-    LOCATION_PRECISION = 50
 
     HUMIDITY_INITIALIZED = False
 

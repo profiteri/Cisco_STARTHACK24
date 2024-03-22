@@ -63,6 +63,8 @@ def process_devices_events(raw_ds):
 
     events_at_timestamp = dict(sorted(events_at_timestamp.items()))
 
+    globals.MINUTES_PER_TIMESTAMP = (globals.END_TIME - globals.START_TIME) * 60 / max(1, len(events_at_timestamp) - 1) 
+
     return events_at_timestamp, stats_at_timestamp
 
 def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):

@@ -102,10 +102,16 @@ print(f"Prepared data in {end_time - start_time} seconds")
 
 
 fig = plt.figure(figsize=(10, 5))
-gs = fig.add_gridspec(3, 2, width_ratios=[4, 1], height_ratios=[2, 2, 1])
+gs = fig.add_gridspec(2, 3, width_ratios=[6, 2, 2], height_ratios=[3, 2])
 
 # Plot on the first subplot (top left)
 ax_map = fig.add_subplot(gs[:, 0])
+
+ax_customers = fig.add_subplot(gs[0, 1])
+
+ax_employees = fig.add_subplot(gs[0, 2])
+
+ax_time = fig.add_subplot(gs[1, 1:])
 
 current_index = 0
 
@@ -123,8 +129,10 @@ ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
 ax_map.set_ylim(globals.MIN_Y, globals.MAX_Y)
 
 # Add a slider for timeline navigation
-slider_ax = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
-slider = Slider(slider_ax, 'Timeline', 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
+slider_ax = plt.axes([0.2, 0.07, 0.65, 0.03])  # [left, bottom, width, height]
+curr_time_ax = plt.axes([0.2, 0.03, 0.65, 0.03])
+end_time_str = f"{globals.END_TIME:02.0f}:00"
+slider = Slider(slider_ax, f"{globals.START_TIME:02.0f}:00", 0, len(all_heatmap_data) - 1, valinit=0, valstep=1, color="darkgrey")
 slider.vline._linewidth = 0
 
 # Update function for slider
@@ -156,6 +164,24 @@ def update():
         
     ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
     ax_map.set_ylim(globals.MIN_Y, globals.MAX_Y)
+
+    slider.valtext.set_text(f"{globals.END_TIME}:00")
+
+
+    ax_time.clear()
+    ax_time.axis('off')
+    avg_time = list(stats_at_timestamp.values())[current_index]['avg_time']
+    stats_time = f"Avg time spent: "
+    stats_time += f"< {globals.MINUTES_PER_TIMESTAMP:.0f} mins" if avg_time == 0.0 else f"{(avg_time * globals.MINUTES_PER_TIMESTAMP):.0f} mins"
+    ax_time.text(0.5, 0.5, stats_time, ha='center', va='center')
+
+    curr_time_ax.clear()
+    curr_time_ax.axis('off')
+    mins_passed = current_index * globals.MINUTES_PER_TIMESTAMP
+    hrs_passed = mins_passed // 60
+    mins_passed = mins_passed % 60
+    curr_time_ax.text(0.5, 0.5, f"{(globals.START_TIME + hrs_passed):02.0f}:{mins_passed:02.0f}", transform=curr_time_ax.transAxes, va='center', ha='center')
+
     plt.draw()
 
 slider.on_changed(move_slider)
