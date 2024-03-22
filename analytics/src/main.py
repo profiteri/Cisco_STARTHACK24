@@ -21,7 +21,7 @@ start_time = time.time()
 
 def load_dataset():
 
-    filename = os.path.join("analytics/data/logs.json")
+    filename = os.path.join("data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
