@@ -146,6 +146,12 @@ def move_slider(val):
     # print(list(stats_at_timestamp.values())[val])
     update()
 
+def timestamp_to_time(index):
+    mins_passed = index * globals.MINUTES_PER_TIMESTAMP
+    hrs_passed = mins_passed // 60
+    mins_passed = mins_passed % 60
+    return f"{(globals.START_TIME + hrs_passed):02.0f}:{mins_passed:02.0f}"
+
 def update():
 
     ax_map.clear()
@@ -173,17 +179,17 @@ def update():
 
     ax_time.clear()
     ax_time.axis('off')
-    avg_time = list(stats_at_timestamp.values())[current_index]['avg_time']
-    stats_time = f"Avg time spent: "
+    stats = list(stats_at_timestamp.values())[current_index]
+    avg_time = stats['avg_time']
+    stats_time = f"Average visit duration: "
     stats_time += f"< {globals.MINUTES_PER_TIMESTAMP:.0f} mins" if avg_time == 0.0 else f"{(avg_time * globals.MINUTES_PER_TIMESTAMP):.0f} mins"
+    stats_time += f"\nPeak time: {timestamp_to_time(stats['peak_time'][0])} - {stats['peak_time'][1]} visitors"
+    stats_time += f"\nOff-peak time: {timestamp_to_time(stats['off_peak_time'][0])} - {stats['off_peak_time'][1]} visitors"
     ax_time.text(0.5, 0.5, stats_time, ha='center', va='center')
 
     curr_time_ax.clear()
     curr_time_ax.axis('off')
-    mins_passed = current_index * globals.MINUTES_PER_TIMESTAMP
-    hrs_passed = mins_passed // 60
-    mins_passed = mins_passed % 60
-    curr_time_ax.text(0.5, 0.5, f"{(globals.START_TIME + hrs_passed):02.0f}:{mins_passed:02.0f}", transform=curr_time_ax.transAxes, va='center', ha='center')
+    curr_time_ax.text(0.5, 0.5, timestamp_to_time(current_index), transform=curr_time_ax.transAxes, va='center', ha='center')
 
     plt.draw()
 

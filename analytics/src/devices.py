@@ -62,15 +62,19 @@ def process_devices_events(raw_ds):
     print(f"y: {globals.MIN_Y} - {globals.MAX_Y}")
 
     events_at_timestamp = dict(sorted(events_at_timestamp.items()))
+    stats_at_timestamp = dict(sorted(stats_at_timestamp.items()))
 
     globals.MINUTES_PER_TIMESTAMP = (globals.END_TIME - globals.START_TIME) * 60 / max(1, len(events_at_timestamp) - 1) 
 
     return events_at_timestamp, stats_at_timestamp
 
+peak_time = None
+off_peak_time = None
+
 def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):
     threshold = 2.0
     connection_matrix = np.zeros((len(all_devices), len(all_devices)), dtype=bool)
-    for ts, events in events_at_timestamp.items():
+    for i, (ts, events) in enumerate(events_at_timestamp.items()):
         for event1 in events:
             pos1 = (event1["deviceLocationUpdate"]["xPos"], event1["deviceLocationUpdate"]["yPos"])
             id1 = all_devices[event1["deviceLocationUpdate"]["device"]["macAddress"]]["id"]
@@ -83,12 +87,26 @@ def calculate_stats_at_timestamp(events_at_timestamp, stats_at_timestamp):
                 if dist <= threshold and employee1 != employee2:
                     connection_matrix[id1][id2] = True
         analyze_connection_matrix(connection_matrix, ts, stats_at_timestamp)
+        stats_at_timestamp[ts]["num_employees"] = len(stats_at_timestamp[ts]["employee_ids"])
+        num_customers = len(stats_at_timestamp[ts]["customer_ids"])
+        stats_at_timestamp[ts]["num_customers"] = num_customers
 
+        global peak_time
+        if peak_time is None or peak_time[1] <= num_customers:
+            peak_time = (i, num_customers)
+
+        global off_peak_time
+        if off_peak_time is None or off_peak_time[1] >= num_customers:
+            off_peak_time = (i, num_customers)
+
+        stats_at_timestamp[ts]["peak_time"] = peak_time
+        stats_at_timestamp[ts]["off_peak_time"] = off_peak_time
+
+all_durations = list()
 
 def analyze_connection_matrix(connection_matrix, ts, stats_at_timestamp):
     num_approached_customers = 0
     num_active_employees = 0
-    all_time_spent = []
     for device_data in all_devices.values():
         approached = sum(connection_matrix[device_data["id"]])
         if device_data["employee"]:
@@ -98,15 +116,13 @@ def analyze_connection_matrix(connection_matrix, ts, stats_at_timestamp):
             if ts >= device_data["first_ts"]:
                 time_spent = min(ts, device_data["last_ts"]) - device_data["first_ts"]
                 if time_spent > 0:
-                    all_time_spent.append(time_spent)
+                    all_durations.append(time_spent)
 
     stats_at_timestamp[ts]["approached_customers"] = num_approached_customers
     stats_at_timestamp[ts]["active_employees"] = num_active_employees
-    stats_at_timestamp[ts]["avg_time"] = sum(all_time_spent) / len(all_time_spent) if len(all_time_spent) else 0
-
-    stats_at_timestamp[ts]["num_employees"] = len(stats_at_timestamp[ts]["employee_ids"])
-    stats_at_timestamp[ts]["num_customers"] = len(stats_at_timestamp[ts]["customer_ids"])
+    stats_at_timestamp[ts]["avg_time"] = sum(all_durations) / len(all_durations) if len(all_durations) else 0
     
+
 def prepare_devices_data(events_at_timestamp):
 
     all_data = []
