@@ -11,9 +11,15 @@ def init():
     global MAX_Y
     global HUMIDITY_INITIALIZED
 
+    global DEVICES_COORDINATES
+
     TIMESTAMP_GRANULARITY = 5
     LOCATION_PRECISION = 50
 
     HUMIDITY_INITIALIZED = False
 
     MIN_X = MAX_X = MIN_Y = MAX_Y = 0
+
+    DEVICES_COORDINATES = [
+        [200, 100], [300, 600], [300, 400], [550, 300], [820, 300], [1000, 600], [620, 620]
+    ]

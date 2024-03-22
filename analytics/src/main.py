@@ -62,7 +62,7 @@ def draw_humidity(all_data):
         print("Humidity index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax_map, legend=False, linewidth=0)
+    scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=5000, palette=sns.color_palette("Blues_d", as_cmap=True), alpha=0.8, ax=ax_map, legend=False, linewidth=0)
     return scatter_plot
     
 def draw_illuminance(all_data, draw_legend):
@@ -70,7 +70,7 @@ def draw_illuminance(all_data, draw_legend):
         print("Illuminance index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=500, palette=sns.color_palette("YlOrBr", as_cmap=True), alpha=0.2, ax=ax_map, legend=draw_legend, linewidth=0)
+    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=7000, palette=sns.color_palette("YlOrBr_d", as_cmap=True), alpha=0.7, ax=ax_map, legend=draw_legend, linewidth=0)
     if draw_legend:
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
@@ -110,7 +110,7 @@ ax_map = fig.add_subplot(gs[:, 0])
 current_index = 0
 
 # Load bg image
-bg_image = plt.imread('analytics/data/test_background.png')
+bg_image = plt.imread('analytics/data/store3.png')
 
 def draw_background_image():    
     ax_map.imshow(bg_image,
