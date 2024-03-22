@@ -21,7 +21,7 @@ start_time = time.time()
 
 def load_dataset():
 
-    filename = os.path.join("data/logs.json")
+    filename = os.path.join("analytics/data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -80,14 +80,17 @@ raw_ds              = load_dataset()
 
 # Prepare concrete data
 events_at_timestamp_devices, stats_at_timestamp = devices.process_devices_events(raw_ds)
+
+# Prepare heatmap data
+global all_heatmap_data
+all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
+globals.SLIDER_SIZE = len(all_heatmap_data) - 1
+
 events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
 events_at_timestamp_illuminance = illuminance.filter_illuminance_events(raw_ds)
 
 devices.calculate_stats_at_timestamp(events_at_timestamp_devices, stats_at_timestamp)
 
-# Prepare heatmap data
-global all_heatmap_data
-all_heatmap_data    = devices.prepare_devices_data(events_at_timestamp_devices)
 # Prepare illumisocity data
 global all_illuminance_data
 all_illuminance_data = illuminance.prepare_illuminance_data(events_at_timestamp_illuminance)
