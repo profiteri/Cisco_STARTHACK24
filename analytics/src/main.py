@@ -21,7 +21,7 @@ start_time = time.time()
 
 def load_dataset():
 
-    filename = os.path.join("data/logs_short.json")
+    filename = os.path.join("data/logs.json")
     with open(filename, 'r') as file:
         json_list = json.load(file)
         return json_list
@@ -79,12 +79,11 @@ def draw_illuminance(all_data, draw_legend):
 raw_ds              = load_dataset()
 
 # Prepare concrete data
-events_at_timestamp_devices = devices.process_devices_events(raw_ds)
+events_at_timestamp_devices, stats_at_timestamp = devices.process_devices_events(raw_ds)
 events_at_timestamp_humidity = humidity.filter_humidity_events(raw_ds)
 events_at_timestamp_illuminance = illuminance.filter_illuminance_events(raw_ds)
 
-connection_matrix = devices.build_connection_matrix(events_at_timestamp_devices)
-devices.analyze_connection_matrix(connection_matrix)
+devices.calculate_stats_at_timestamp(events_at_timestamp_devices, stats_at_timestamp)
 
 # Prepare heatmap data
 global all_heatmap_data
@@ -128,6 +127,7 @@ slider.vline._linewidth = 0
 def move_slider(val):
     global current_index
     current_index = val
+    # print(list(stats_at_timestamp.values())[val])
     update()
 
 def update():
