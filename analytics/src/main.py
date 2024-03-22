@@ -36,7 +36,7 @@ scatter_palette = {"Employee": color_employee, "Customer": color_customer}
 
 def draw_scatterplot(all_data):
     df = all_data[current_index]
-    scatter_plot = sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, legend='auto', ax=ax)
+    scatter_plot = sns.scatterplot(x=df["x"], y=df["y"], hue=df["employee"], palette=scatter_palette, edgecolor=None, alpha=0.4, legend='auto', ax=ax_map)
     
     ### All this crap just to make sure that legend always looks the same...
     handles, labels = scatter_plot.get_legend_handles_labels()
@@ -55,14 +55,14 @@ def draw_kdeplot(all_data, value_x='x', value_y='y', cmap='Reds'):
     return sns.kdeplot(data=all_data[current_index], x=value_x, y=value_y,
                        bw_adjust=0.2, levels=20,
                        clip=((globals.MIN_X, globals.MAX_X), (globals.MIN_Y, globals.MAX_Y)), common_norm=False,
-                       cmap=cmap, fill=True, alpha=0.4, ax=ax)
+                       cmap=cmap, fill=True, alpha=0.4, ax=ax_map)
 
 def draw_humidity(all_data):
     if current_index >= len(all_data):
         print("Humidity index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax, legend=False, linewidth=0)
+    scatter_plot = sns.scatterplot(data=glue, x='x', y='y', hue='Humidity', s=300, palette=sns.color_palette("ch:s=.25,rot=-.25", as_cmap=True), alpha=0.3, ax=ax_map, legend=False, linewidth=0)
     return scatter_plot
     
 def draw_illuminance(all_data, draw_legend):
@@ -70,7 +70,7 @@ def draw_illuminance(all_data, draw_legend):
         print("Illuminance index out of bound")
         return
     glue = pd.DataFrame.from_dict(all_data[current_index])
-    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=500, palette=sns.color_palette("YlOrBr", as_cmap=True), alpha=0.2, ax=ax, legend=draw_legend, linewidth=0)
+    res = sns.scatterplot(data=glue, x='x', y='y', hue='illuminance', s=500, palette=sns.color_palette("YlOrBr", as_cmap=True), alpha=0.2, ax=ax_map, legend=draw_legend, linewidth=0)
     if draw_legend:
         sns.move_legend(res, "upper left", bbox_to_anchor=(1, 1))
     return res
@@ -100,22 +100,27 @@ end_time = time.time()
 
 print(f"Prepared data in {end_time - start_time} seconds")
 
-# Create the initial figure and axis
-fig, ax = plt.subplots()
+
+fig = plt.figure(figsize=(10, 5))
+gs = fig.add_gridspec(3, 2, width_ratios=[4, 1], height_ratios=[2, 2, 1])
+
+# Plot on the first subplot (top left)
+ax_map = fig.add_subplot(gs[:, 0])
+
 current_index = 0
 
 # Load bg image
 bg_image = plt.imread('analytics/data/test_background.png')
 
 def draw_background_image():    
-    ax.imshow(bg_image,
+    ax_map.imshow(bg_image,
             aspect='auto',
             extent=[globals.MIN_X, globals.MAX_X, globals.MIN_Y, globals.MAX_Y])
-    ax.axis('off')
+    ax_map.axis('off')
 
 # Set the limits for the x and y axes to prevent the graph from changing height
-ax.set_xlim(globals.MIN_X, globals.MAX_X)
-ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
+ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
+ax_map.set_ylim(globals.MIN_Y, globals.MAX_Y)
 
 # Add a slider for timeline navigation
 slider_ax = plt.axes([0.2, 0.04, 0.65, 0.03])  # [left, bottom, width, height]
@@ -132,7 +137,7 @@ def move_slider(val):
 
 def update():
 
-    ax.clear()
+    ax_map.clear()
     draw_background_image()
 
     global check_states
@@ -149,8 +154,8 @@ def update():
     if check_states['Occupation']:
         draw_scatterplot(all_heatmap_data)
         
-    ax.set_xlim(globals.MIN_X, globals.MAX_X)
-    ax.set_ylim(globals.MIN_Y, globals.MAX_Y)
+    ax_map.set_xlim(globals.MIN_X, globals.MAX_X)
+    ax_map.set_ylim(globals.MIN_Y, globals.MAX_Y)
     plt.draw()
 
 slider.on_changed(move_slider)
